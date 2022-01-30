@@ -1,9 +1,10 @@
-import Head from 'next/head'
 import { useState, useEffect } from "react";
+import Head from "next/head";
 import { supabase } from "../client";
 
 export default function Home() {
-
+  const [loading, setLoading] = useState(true);
+  const [tasks, setTasks] = useState([]);
   const [task, setTask] = useState({
     Name: "",
     Activity: "",
@@ -12,6 +13,12 @@ export default function Home() {
   });
 
   const { Name, Activity, StartDate, EndDate } = task;
+
+  async function getTasks() {
+    const { data } = await supabase.from("Task").select();
+    setTasks(data);
+    setLoading(false);
+  }
 
   async function addTask() {
     await supabase
@@ -31,7 +38,24 @@ export default function Home() {
       StartDate: "",
       EndDate: "",
     });
+    getTasks();
   }
+
+  async function deleteTask(id){
+    await supabase.from("Task").delete().eq("id", id);
+    getTasks();
+  }
+  
+  useEffect(() => {
+    getTasks();
+  }, []);
+
+  if (loading)
+    return (
+      <div className='flex justify-center items-center'>
+        <div className='animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500 mt-36'></div>
+      </div>
+    );
 
   return (
     <div className="flex flex-col items-center justify-center py-2">
@@ -56,7 +80,11 @@ export default function Home() {
                     <label className='block text-gray-700 text-sm font-bold mb-2' htmlFor='taskName'>
                       Task Name
                     </label>
-                    <input className='shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline' id="taskName" type="text"/>
+                    <input className='shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline' 
+                      id="taskName" 
+                      type="text"
+                      value={Name.toString()}
+                      onChange={(e) => setTask({...task, Name: e.target.value})}/>
   
                   </div>
                   <div className='mb-4'>
@@ -65,25 +93,37 @@ export default function Home() {
                     </label>
                     <textarea 
                       className='form-text-area mt-1 block shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline' 
-                      rows='3' 
-                      placeholder="Task Activity"></textarea>
+                      rows="3" 
+                      placeholder="Task Activity"
+                      value={Activity.toString()}
+                      onChange={(e) => setTask({ ...task, Activity: e.target.value })}></textarea>
                   </div>
 
                   <div className="mb-4">
                     <label className='block text-gray-700 text-sm font-bold mb-2' htmlFor='startDate'>
                       Task Start Date
                     </label>
-                    <input className='shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline' id='startDate' type='date'/>
+                    <input className='shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline'
+                      id='startDate'
+                      type='date'
+                      value={StartDate.toString()}
+                      onChange={(e) => setTask({ ...task, StartDate : e.target.value })}/>
 
                   </div>
                   <div className='mb-4'>
                     <label className='block text-gray-700 text-sm font-bold mb-2' htmlFor='endDate'>
                       Task End Date
                     </label>
-                    <input className='shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline' id='endDate' type='date'/>
+                    <input className='shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline' 
+                      id='endDate' 
+                      type='date'
+                      value={EndDate.toString()}
+                      onChange={(e) => setTask({ ...task, EndDate: e.target.value })}/>
                   </div>
                   <div className='flex items-center justify-between'>
-                    <button className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline' type='button'>
+                    <button className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline' 
+                      type='button'
+                      onClick={addTask}>
                       Add Task
                     </button>
                   </div>
@@ -113,18 +153,27 @@ export default function Home() {
                       Action
                     </th>
                   </tr>
-                  <tr>
-                    <td className='border px-4 py-4'></td>
-                    <td className='border px-4 py-4'></td>
-                    <td className='border px-4 py-4'></td>
-                    <td className='border px-4 py-4'></td>
-                    <td className='border px-4 py-4'></td>
-                    <td className='border px-4 py-4'>
-                      {" "}
-                      <button className='bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline' type="button">
-                        Delete </button>
-                      </td>
-                  </tr>
+                  {task &&
+                    tasks.map((task, index) => (
+                      <tr key={task.id}>
+                        <td className="border px-4 py-4">{index + 1}</td>
+                        <td className="border px-4 py-4">{task.Name}</td>
+                        <td className="border px-8 py-4">{task.Activity}</td>
+                        <td className="border px-8 py-4">{task.StartDate}</td>
+                        <td className="border px-8 py-4">{task.EndDate}</td>
+                        <td className="border px-8 py-4">
+                          {" "}
+                          <button
+                            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                            type="button"
+                            onClick={() => deleteTask(task.id)}
+                          >
+                            Delete 
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                      
                 </tbody>
               </table>
             </div>
