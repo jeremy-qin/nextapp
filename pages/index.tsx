@@ -1,4 +1,6 @@
 import Head from 'next/head'
+import { useState, useEffect } from "react";
+import { supabase } from "../client";
 
 export default function Home() {
   return (
