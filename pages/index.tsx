@@ -3,6 +3,36 @@ import { useState, useEffect } from "react";
 import { supabase } from "../client";
 
 export default function Home() {
+
+  const [task, setTask] = useState({
+    Name: "",
+    Activity: "",
+    StartDate: "",
+    EndDate: "",
+  });
+
+  const { Name, Activity, StartDate, EndDate } = task;
+
+  async function addTask() {
+    await supabase
+      .from("Task")
+      .insert([
+        {
+          Name,
+          Activity,
+          StartDate,
+          EndDate,
+        },
+      ])
+      .single();
+    setTask({
+      Name:"",
+      Activity:"",
+      StartDate: "",
+      EndDate: "",
+    });
+  }
+
   return (
     <div className="flex flex-col items-center justify-center py-2">
       <div>
